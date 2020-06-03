@@ -30,7 +30,9 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              
+            ]
           },
           "configurations": {
             "production": {
@@ -123,6 +125,10 @@
           }
         }
       }
-    }},
-  "defaultProject": "mdbs"
+    }
+  },
+  "defaultProject": "mdbs",
+  "cli": {
+    "analytics": "60afa8ed-bf3d-4e23-acf9-efc83d20c82d"
+  }
 }
