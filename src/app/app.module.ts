@@ -26,13 +26,15 @@ import { CountryListComponent } from './country-list/country-list.component';
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
-    RouterModule.forRoot([
+    RouterModule.forRoot(
+    [
       {path: '', component: HomeComponent},
       {path: 'countries', component: CountriesComponent},
       {path: 'countries/:name', component: CountryDetailsComponent},
       {path: 'countryNotFound/:name', component: CountryNotFoundComponent},
       {path: 'countryList', component: CountryListComponent},
-    ])
+    ],
+    {onSameUrlNavigation: 'reload'})
     
   ],
   providers: [],

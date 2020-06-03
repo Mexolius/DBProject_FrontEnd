@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import * as CanvasJS from 'src/assets/canvasjs.min';
-import { ActivatedRoute, Router } from '@angular/router';
-import { DatabaseService } from '../database.service';
+import { ActivatedRoute, Router, RouterEvent, NavigationEnd } from '@angular/router';
+import { DatabaseService, GraphCompatibleData } from '../database.service';
+import { filter } from 'rxjs/operators';
 
 
 @Component({
@@ -16,103 +17,65 @@ export class CountryDetailsComponent implements OnInit {
   dthChart;
   country;
 
-  constructor(private route: ActivatedRoute, private database: DatabaseService, private router: Router)
+  labels: Array<string>;
+  conf: Array<number>;
+  rec: Array<number>;
+  ded: Array<number>;
+
+  constructor(private route: ActivatedRoute, private db: DatabaseService, private router: Router)
   {
-    this.route.paramMap.subscribe(pars=>
-      {
-        this.country = pars.get(pars.keys[0]);
-		this.country=this.country.charAt(0).toLocaleUpperCase()+this.country.substring(1);
-
+	this.router.events.pipe(
+		filter((event: RouterEvent) => event instanceof NavigationEnd)
+	  ).subscribe(() => {
+		this.setCountry();
+		this.renderGraphs();
 	  });
-
+	  this.setCountry();
   }
 
-  ngOnInit() {
-		this.infChart = new CanvasJS.Chart("infectionsPerDay", {
-    animationEnabled: true,
-    backgroundColor: "rgba(255,255,255,0)",
-		title: {
-			text: 'Infections in ' + this.country + ' by date'
-		},
-		data: [{
-			type: "line",
-			dataPoints: [
-				{ y: 71, label: "Apple" },
-				{ y: 43, label: "Mango" },
-				{ y: 50, label: "Orange" },
-				{ y: 34, label: "Banana" },
-				{ y: 95, label: "Pineapple" },
-				{ y: 44, label: "Pears" },
-				{ y: 54, label: "Grapes" },
-				{ y: 54, label: "Lychee" },
-				{ y: 14, label: "Jackfruit" }
-			]
-    },
-    {
-    type: "scatter",
-    dataPoints: [
-      { y: 71, label: "Apple" },
-      { y: 55, label: "Mango" },
-      { y: 50, label: "Orange" },
-      { y: 65, label: "Banana" },
-      { y: 95, label: "Pineapple" },
-      { y: 68, label: "Pears" },
-      { y: 28, label: "Grapes" },
-      { y: 34, label: "Lychee" },
-      { y: 14, label: "Jackfruit" }
-    ]
-  }]
-  });
-
-  this.recChart = new CanvasJS.Chart("recoveriesPerDay", {
-    animationEnabled: true,
-		title: {
-			text: 'Recoveries in ' + this.country + ' by date'
-    },
-    backgroundColor: "rgba(255,255,255,0)",
-		data: [{
-			type: "bar",
-			dataPoints: [
-				{ y: 71, label: "Apple" },
-				{ y: 55, label: "Mango" },
-				{ y: 50, label: "Orange" },
-				{ y: 65, label: "Banana" },
-				{ y: 95, label: "Pineapple" },
-				{ y: 68, label: "Pears" },
-				{ y: 28, label: "Grapes" },
-				{ y: 34, label: "Lychee" },
-				{ y: 14, label: "Jackfruit" }
-			]
-		}]
-  });
-
-  this.dthChart = new CanvasJS.Chart("deathsPerDay", {
-    animationEnabled: true,
-    maintainAspectRatio: true,
-    aspectRatio:1.5,
-		title: {
-			text: 'Deaths in ' + this.country + ' by date'
-    },
-    backgroundColor: "rgba(255,255,255,0)",
-		data: [{
-			type: "line",
-			dataPoints: [
-				{ y: 71, label: "Apple" },
-				{ y: 55, label: "Mango" },
-				{ y: 50, label: "Orange" },
-				{ y: 65, label: "Banana" },
-				{ y: 95, label: "Pineapple" },
-				{ y: 68, label: "Pears" },
-				{ y: 28, label: "Grapes" },
-				{ y: 34, label: "Lychee" },
-				{ y: 14, label: "Jackfruit" }
-			]
-		}]
-  });
-
-		
-  this.infChart.render();
-  this.recChart.render();
-  this.dthChart.render();
+	private setCountry() :void
+	{
+    	this.route.paramMap.subscribe(pars=>
+		{
+		  this.country = pars.get(pars.keys[0]);
+		  this.country=this.country.charAt(0).toLocaleUpperCase()+this.country.substring(1);
+		});
 	}
+
+	private renderGraphs():void
+	{
+		this.db.getCountryInfo(this.country).then(data=>{
+			console.log(data);
+			this.labels = data.map(day=>day.date);
+			this.conf = data.map(day=>day.confirmed);
+			this.rec = data.map(day=>day.recovered);
+			this.ded = data.map(day=>day.deaths);
+
+			/*console.log(this.labels);
+			console.log(this.conf);
+			console.log(this.rec);
+			console.log(this.ded);*/
+
+
+			this.infChart = new CanvasJS.Chart("infectionsPerDay", new GraphCompatibleData(true,"Confirmed Cases in " + this.country,this.labels,this.conf,"column").toDataObject());
+			this.recChart = new CanvasJS.Chart("recoveriesPerDay", new GraphCompatibleData(true,"Recoveries in " + this.country,this.labels,this.rec,"column").toDataObject());
+			this.dthChart = new CanvasJS.Chart("deathsPerDay", new GraphCompatibleData(true,"Deaths in " + this.country,this.labels,this.ded,"column").toDataObject());
+  
+		  
+			this.infChart.render();
+			this.recChart.render();
+			this.dthChart.render();
+  
+		}).catch(error=>
+			{
+				console.log(error);
+				this.router.navigate(['countryNotFound/'+this.country]);
+			});
+	}
+
+  	ngOnInit() {
+		this.renderGraphs();
+	}
+
+
 }

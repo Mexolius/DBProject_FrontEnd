@@ -45,9 +45,15 @@ export class DatabaseService {
   public getCountryInfo(countryName: string) : Promise<EpidemyDay[]>
   {
     countryName=countryName.charAt(0).toLocaleUpperCase()+countryName.substring(1);
-    return this.http.get<countryDetail>(this.baseURL.concat(this.summaryURL).concat('/'+countryName)).pipe(
-      map(data=>data.days)
+    if(countryName[0]==' ') countryName=countryName.substring(1);
+    var url = this.baseURL.concat(this.countriesURL).concat('/'+countryName);
+    console.log(url)
+    return this.http.get<countryDetail>(url).pipe(
+      map(data=> data.epidemyDays.sort((a,b)=>{
+        return a.date<b.date?1:-1;
+      }))
       ).toPromise();
+
   }
 }
 
@@ -77,7 +83,7 @@ export class EpidemyDay
 
 class countryDetail{
   name: string;
-  days: Array<EpidemyDay>;
+  epidemyDays: Array<EpidemyDay>;
 }
 
 export class GraphCompatibleData
@@ -94,11 +100,9 @@ export class GraphCompatibleData
     {
       this.animationEnabled=aniEnabled
       this.backgroundColor="rgba(255,255,255,0)"
-      console.log(labels);
       this.lables=labels;
       this.titleText=title;
       this.data=data;
-      console.log(data);
       this.type=type;
     }
 
@@ -108,12 +112,12 @@ export class GraphCompatibleData
       for(var i=0;i<this.lables.length;i++)
       {
         var day = {y:this.data[i], label: this.lables[i]}
-        if (day.y>20000)ret.push(day);
+        ret.push(day);
       }
       return ret.reverse();
     }
 
-    public toDataObject(colorSet: string)
+    public toDataObject(colorSet: string="")
     {
       var dataArray = this.prepDArr();
       var ret = {
@@ -128,7 +132,6 @@ export class GraphCompatibleData
               dataPoints: dataArray
           }]
       }
-      console.log(ret);
       return ret;
     }
 }

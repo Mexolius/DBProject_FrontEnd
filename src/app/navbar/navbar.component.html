@@ -1,13 +1,15 @@
 <header>
     <div class="container">
-      <a routerLink="/" class="logo">apptitle</a>
+      <a routerLink="/" class="logo">CRONE</a>
       <nav>
         <ul>
+            <form (submit)="onSubmit()">
           <li><a routerLink="/">Home</a></li>
           <li><a routerLink="/countryList">Countries</a></li>
           <li><a routerLink="/countries">Summary</a></li>
-          <li><input type="text"></li>
-          <li><a routerLink="/countries/poland">Search</a></li>
+          <li><input #player placeholder="player name"></li>
+          <li><a (click)="onSubmit(player.value)">Search</a></li>
+        </form>
         </ul>
       </nav>
     </div>
