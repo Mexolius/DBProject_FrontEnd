@@ -24,9 +24,6 @@ export class CountryDetailsComponent implements OnInit {
 		this.country=this.country.charAt(0).toLocaleUpperCase()+this.country.substring(1);
 
 	  });
-	  database.getAllCountries().subscribe(
-		  (value)=>console.log(value)
-	  )
 
   }
 
