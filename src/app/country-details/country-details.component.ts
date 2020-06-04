@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as CanvasJS from 'src/assets/canvasjs.min';
 import { ActivatedRoute, Router, RouterEvent, NavigationEnd } from '@angular/router';
-import { DatabaseService, GraphCompatibleData } from '../database.service';
+import { DatabaseService, GraphCompatibleData, EpidemyDay } from '../database.service';
 import { filter } from 'rxjs/operators';
 
 
@@ -12,10 +12,16 @@ import { filter } from 'rxjs/operators';
 })
 export class CountryDetailsComponent implements OnInit {
 
+  days: Array<EpidemyDay>;
+  difference: Array<EpidemyDay>;
+  current: string;
+  current2: string;
+
   infChart;
   recChart;
-  dthChart;
   country;
+
+  RoutingRefresh: any;
 
   labels: Array<string>;
   conf: Array<number>;
@@ -24,13 +30,31 @@ export class CountryDetailsComponent implements OnInit {
 
   constructor(private route: ActivatedRoute, private db: DatabaseService, private router: Router)
   {
-	this.router.events.pipe(
+	CanvasJS.addColorSet("confirmed",
+	[
+		"#3B71EC",
+		"#2C53AD"              
+	]);
+	CanvasJS.addColorSet("recovered",
+	[
+		"#36AD2C",
+		"#45E238"    
+	]);
+	CanvasJS.addColorSet("deaths",
+	[
+		"#AD2C2C",
+		"#E23838"  
+	]);
+	this.RoutingRefresh = this.router.events.pipe(
 		filter((event: RouterEvent) => event instanceof NavigationEnd)
 	  ).subscribe(() => {
 		this.setCountry();
 		this.renderGraphs();
-	  });
+	  }).unsubscribe();
 	  this.setCountry();
+	  this.current='confirmed';
+	  this.current2='confirmed';
+
   }
 
 	private setCountry() :void
@@ -39,42 +63,62 @@ export class CountryDetailsComponent implements OnInit {
 		{
 		  this.country = pars.get(pars.keys[0]);
 		  this.country=this.country.charAt(0).toLocaleUpperCase()+this.country.substring(1);
-		});
+		}).unsubscribe();
 	}
+
+	private drawGraph1()
+	{
+	 this.infChart=new CanvasJS.Chart("infectionsPerDay", new GraphCompatibleData(true,'Total Summary of ' + this.current + ' for '+this.country+ ' by date',
+	 this.days.map(record=>record.date.substr(0,10)),this.days.map(record=>record[this.current]),"column").toDataObject(this.current));
+	 this.infChart.render();
+	}
+
+	private drawGraph2()
+	{
+	 this.recChart=new CanvasJS.Chart("recoveriesPerDay", new GraphCompatibleData(true,'Total Summary of NEW ' + this.current2 + ' for '+this.country+ ' by date',
+	 this.difference.map(record=>record.date.substr(0,10)),this.difference.map(record=>record[this.current2]),"column").toDataObject(this.current2));
+	 this.recChart.render();
+	}
+ 
 
 	private renderGraphs():void
 	{
-		this.db.getCountryInfo(this.country).then(data=>{
-			console.log(data);
-			this.labels = data.map(day=>day.date);
-			this.conf = data.map(day=>day.confirmed);
-			this.rec = data.map(day=>day.recovered);
-			this.ded = data.map(day=>day.deaths);
-
-			/*console.log(this.labels);
-			console.log(this.conf);
-			console.log(this.rec);
-			console.log(this.ded);*/
-
-
-			this.infChart = new CanvasJS.Chart("infectionsPerDay", new GraphCompatibleData(true,"Confirmed Cases in " + this.country,this.labels,this.conf,"column").toDataObject());
-			this.recChart = new CanvasJS.Chart("recoveriesPerDay", new GraphCompatibleData(true,"Recoveries in " + this.country,this.labels,this.rec,"column").toDataObject());
-			this.dthChart = new CanvasJS.Chart("deathsPerDay", new GraphCompatibleData(true,"Deaths in " + this.country,this.labels,this.ded,"column").toDataObject());
-  
-		  
-			this.infChart.render();
-			this.recChart.render();
-			this.dthChart.render();
-  
-		}).catch(error=>
+		let sub = this.db.getCountryInfo(this.country).subscribe(data=>{
+			if(data==null)
 			{
-				console.log(error);
+				sub.unsubscribe();
 				this.router.navigate(['countryNotFound/'+this.country]);
-			});
+				return;
+			}
+			this.days=data; 
+			this.drawGraph1();
+		});
+		let sub2 = this.db.getCountryDifference(this.country).subscribe(data=>{
+			if(data==null)
+			{
+				sub2.unsubscribe();
+				this.router.navigate(['countryNotFound/'+this.country]);
+				return;
+			}
+			this.difference=data; 
+			this.drawGraph2();
+		});
 	}
 
   	ngOnInit() {
 		this.renderGraphs();
+	}
+
+	private setgraph(name: string)
+	{
+		this.current=name;
+		this.drawGraph1();
+	}
+
+	private setGraph2(name: string)
+	{
+		this.current2=name;
+		this.drawGraph2();
 	}
 
 

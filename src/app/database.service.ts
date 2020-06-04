@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, concat } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Injectable({
@@ -18,7 +18,9 @@ export class DatabaseService {
   constructor(private http: HttpClient) {
     this.baseURL='http://localhost:8080';
     this.countriesURL='/countries';
-    this.summaryURL='/summary/total'
+    this.summaryURL='/summary';
+    this.daysURL='/days';
+    this.differenceURL='/difference';
   }
 
   public getCountryNames(): Promise<CountryInfo[]>
@@ -32,27 +34,50 @@ export class DatabaseService {
       ).toPromise();
   }
 
-  public getTotalSummary(param: string) : Promise<GraphCompatibleData>
+  public getTotalSummary() : Observable<EpidemyDay[]>
   {
-    return this.http.get<EpidemyDay[]>(this.baseURL.concat(this.summaryURL)).pipe(
-      map(data=>
-        new GraphCompatibleData(true, "Summary of " + param + " by date", data.map(info=>info.date),data.map(day=>day[param]))
-        )
-      ).toPromise();
-
+    return this.http.get<EpidemyDay[]>(this.baseURL.concat(this.summaryURL).concat('/total'));
   }
 
-  public getCountryInfo(countryName: string) : Promise<EpidemyDay[]>
+  public getCurrentSummary() : Observable<EpidemyDay>
+  {
+    return this.http.get<EpidemyDay>(this.baseURL.concat(this.summaryURL).concat('/current'));
+  }
+
+  public getCountryInfo(countryName: string) : Observable<EpidemyDay[]>
   {
     countryName=countryName.charAt(0).toLocaleUpperCase()+countryName.substring(1);
     if(countryName[0]==' ') countryName=countryName.substring(1);
     var url = this.baseURL.concat(this.countriesURL).concat('/'+countryName);
     console.log(url)
     return this.http.get<countryDetail>(url).pipe(
-      map(data=> data.epidemyDays.sort((a,b)=>{
-        return a.date<b.date?1:-1;
-      }))
-      ).toPromise();
+      map(data=> 
+        {
+          if(data==null)
+          {
+            return null;
+          } 
+          return data.epidemyDays.sort((a,b)=>a.date<b.date?1:-1)
+        }));
+
+  }
+
+  public getCountryDifference(countryName: string) : Observable<EpidemyDay[]>
+  {
+    countryName=countryName.charAt(0).toLocaleUpperCase()+countryName.substring(1);
+    if(countryName[0]==' ') countryName=countryName.substring(1);
+    var url = this.baseURL.concat(this.countriesURL).concat('/'+countryName).concat(this.daysURL).concat(this.differenceURL);
+    console.log(url)
+    return this.http.get<EpidemyDay[]>(url).pipe(
+      map(data=> 
+        {
+          if(data==null)
+          {
+            return null;
+          }
+          console.log(data); 
+          return data.sort((a,b)=>a.date<b.date?1:-1)
+        }));
 
   }
 }

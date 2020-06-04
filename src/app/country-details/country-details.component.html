@@ -2,6 +2,15 @@
 
 <div style="margin: 0 20% 0 20%;">
     <div class="chart" id="infectionsPerDay" ></div>
+    <div class="buttonMenu">
+        <a class="choice" (click)="setgraph('confirmed')">confirmed</a>
+        <a class="choice" (click)="setgraph('recovered')">recovered</a>
+        <a class="choice" (click)="setgraph('deaths')">deaths</a>
+    </div>
     <div class="chart" id="recoveriesPerDay"></div>
-    <div class="chart" id="deathsPerDay"></div>
+    <div class="buttonMenu">
+        <a class="choice" (click)="setGraph2('confirmed')">confirmed</a>
+        <a class="choice" (click)="setGraph2('recovered')">recovered</a>
+        <a class="choice" (click)="setGraph2('deaths')">deaths</a>
+    </div>
 </div>

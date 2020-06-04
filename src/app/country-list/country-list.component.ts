@@ -36,7 +36,7 @@ export class CountryListComponent implements OnInit {
 
   public handleClick(e: Event)
   {
-    this.router.navigate(['countries/'+e.target.textContent])
+    this.router.navigate(['countries/'+e.target.textContent]);
   }
 
 }

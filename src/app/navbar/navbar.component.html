@@ -3,12 +3,12 @@
       <a routerLink="/" class="logo">CRONE</a>
       <nav>
         <ul>
-            <form (submit)="onSubmit()">
+          <form>
           <li><a routerLink="/">Home</a></li>
           <li><a routerLink="/countryList">Countries</a></li>
           <li><a routerLink="/countries">Summary</a></li>
-          <li><input #player placeholder="player name"></li>
-          <li><a (click)="onSubmit(player.value)">Search</a></li>
+          <li><input #country placeholder="country name"></li>
+          <li><a (click)="onSubmit(country.value)">Search</a></li>
         </form>
         </ul>
       </nav>

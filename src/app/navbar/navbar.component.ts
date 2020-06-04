@@ -10,8 +10,6 @@ export class NavbarComponent implements OnInit {
 
   appTitle: string = 'myapp';
 
-
-
   constructor(private router: Router) { }
 
   onSubmit(name: string) {
