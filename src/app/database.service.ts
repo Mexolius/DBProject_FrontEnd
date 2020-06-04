@@ -66,6 +66,7 @@ export class DatabaseService {
   {
     countryName=countryName.charAt(0).toLocaleUpperCase()+countryName.substring(1);
     if(countryName[0]==' ') countryName=countryName.substring(1);
+    if(countryName[countryName.length-1]==' ') countryName=countryName.substring(0,countryName.length-1);
     var url = this.baseURL.concat(this.countriesURL).concat('/'+countryName).concat(this.daysURL).concat(this.differenceURL);
     console.log(url)
     return this.http.get<EpidemyDay[]>(url).pipe(
@@ -75,7 +76,6 @@ export class DatabaseService {
           {
             return null;
           }
-          console.log(data); 
           return data.sort((a,b)=>a.date<b.date?1:-1)
         }));
 
@@ -137,7 +137,7 @@ export class GraphCompatibleData
       for(var i=0;i<this.lables.length;i++)
       {
         var day = {y:this.data[i], label: this.lables[i]}
-        ret.push(day);
+        if(day.y>0)ret.push(day);
       }
       return ret.reverse();
     }

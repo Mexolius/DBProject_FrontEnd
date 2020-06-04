@@ -50,7 +50,7 @@ export class CountryDetailsComponent implements OnInit {
 	  ).subscribe(() => {
 		this.setCountry();
 		this.renderGraphs();
-	  }).unsubscribe();
+	  })	;
 	  this.setCountry();
 	  this.current='confirmed';
 	  this.current2='confirmed';
@@ -100,6 +100,7 @@ export class CountryDetailsComponent implements OnInit {
 				this.router.navigate(['countryNotFound/'+this.country]);
 				return;
 			}
+			console.log(data);
 			this.difference=data; 
 			this.drawGraph2();
 		});
