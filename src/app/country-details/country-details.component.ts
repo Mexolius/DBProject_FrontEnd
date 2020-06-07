@@ -3,6 +3,7 @@ import * as CanvasJS from 'src/assets/canvasjs.min';
 import { ActivatedRoute, Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { DatabaseService, GraphCompatibleData, EpidemyDay } from '../database.service';
 import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -21,7 +22,7 @@ export class CountryDetailsComponent implements OnInit {
   recChart;
   country;
 
-  RoutingRefresh: any;
+  RoutingRefresh: Subscription;
 
   labels: Array<string>;
   conf: Array<number>;
@@ -48,28 +49,52 @@ export class CountryDetailsComponent implements OnInit {
 	this.RoutingRefresh = this.router.events.pipe(
 		filter((event: RouterEvent) => event instanceof NavigationEnd)
 	  ).subscribe(() => {
-		this.setCountry();
-		this.renderGraphs();
-	  })	;
-	  this.setCountry();
+		this.setCountry()
+		.then(exists=>
+		{
+			if(exists)
+			{
+				console.log(exists);
+				console.log('drawing');
+				this.renderGraphs();
+			}
+		})
+		.catch(error=>console.log(error));
+	  });
 	  this.current='confirmed';
 	  this.current2='confirmed';
 
   }
 
-	private setCountry() :void
+	private async setCountry() :Promise<Boolean>
 	{
-    	this.route.paramMap.subscribe(pars=>
-		{
-		  this.country = pars.get(pars.keys[0]);
-		  this.country=this.country.charAt(0).toLocaleUpperCase()+this.country.substring(1);
-		}).unsubscribe();
+		return new Promise((res,rej)=>{
+			this.db.getCountryNames()
+			let a = this.route.paramMap.subscribe(pars=>
+			{
+			  this.country = pars.get(pars.keys[0]);
+			  this.country=this.country.charAt(0).toLocaleUpperCase()+this.country.substring(1);
+			  
+			  this.db.countryExists(this.country).then(exists=>{
+				if(!exists) 
+				{
+					this.RoutingRefresh.unsubscribe();
+					a.unsubscribe();
+					this.router.navigate(['/countryNotFound/'+this.country]);
+					res(false);
+				}
+				else res(true);
+			  });
+			});
+			a.unsubscribe();
+		});
 	}
 
 	private drawGraph1()
 	{
 	 this.infChart=new CanvasJS.Chart("infectionsPerDay", new GraphCompatibleData(true,'Total Summary of ' + this.current + ' for '+this.country+ ' by date',
 	 this.days.map(record=>record.date.substr(0,10)),this.days.map(record=>record[this.current]),"column").toDataObject(this.current));
+	 if(this.infChart!=undefined)
 	 this.infChart.render();
 	}
 
@@ -77,49 +102,45 @@ export class CountryDetailsComponent implements OnInit {
 	{
 	 this.recChart=new CanvasJS.Chart("recoveriesPerDay", new GraphCompatibleData(true,'Total Summary of NEW ' + this.current2 + ' for '+this.country+ ' by date',
 	 this.difference.map(record=>record.date.substr(0,10)),this.difference.map(record=>record[this.current2]),"column").toDataObject(this.current2));
+	 if(this.recChart!=undefined)
 	 this.recChart.render();
 	}
  
 
-	private renderGraphs():void
+	private async renderGraphs(): Promise<void>
 	{
-		let sub = this.db.getCountryInfo(this.country).subscribe(data=>{
-			if(data==null)
-			{
-				sub.unsubscribe();
-				this.router.navigate(['countryNotFound/'+this.country]);
-				return;
-			}
+		this.db.getCountryInfo(this.country).then(data=>{
 			this.days=data; 
 			this.drawGraph1();
 		});
-		let sub2 = this.db.getCountryDifference(this.country).subscribe(data=>{
-			if(data==null)
-			{
-				sub2.unsubscribe();
-				this.router.navigate(['countryNotFound/'+this.country]);
-				return;
-			}
-			console.log(data);
+		this.db.getCountryDifference(this.country).then(data=>{
 			this.difference=data; 
 			this.drawGraph2();
 		});
 	}
 
   	ngOnInit() {
-		this.renderGraphs();
+		this.setCountry()
+		.then(exists=>
+		{
+			if(exists) this.renderGraphs();
+		})
+		.catch(error=>console.log(error));
 	}
 
-	private setgraph(name: string)
+	public setgraph(name: string)
 	{
+		console.log('setting');
 		this.current=name;
-		this.drawGraph1();
+		if(this.days)this.drawGraph1();
 	}
 
-	private setGraph2(name: string)
+	public setGraph2(name: string)
 	{
+		console.log('setting');
+
 		this.current2=name;
-		this.drawGraph2();
+		if(this.difference)this.drawGraph2();
 	}
 
 

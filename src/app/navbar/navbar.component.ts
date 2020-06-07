@@ -14,7 +14,7 @@ export class NavbarComponent implements OnInit {
 
   onSubmit(name: string) {
     name=name.charAt(0).toLocaleUpperCase()+name.substring(1);
-    this.router.navigate(['countries/'+name]);
+    this.router.navigate(['/countries/'+name]);
   }
 
   ngOnInit(): void {

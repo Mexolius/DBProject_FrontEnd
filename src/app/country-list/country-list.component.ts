@@ -14,8 +14,7 @@ export class CountryListComponent implements OnInit {
 
   constructor(private db: DatabaseService, private router: Router) {
     this.headers=['0','1','2','3'];
-    db.getCountryNames().then(data=>{
-      console.log(data);
+    this.db.getCountryNames().then(data=>{
       for(var i=0;i<data.length;i+=4)
       {
         var obj={};
@@ -23,20 +22,21 @@ export class CountryListComponent implements OnInit {
         {
           if(i+j<data.length)
           {
-            obj[(j).toString()]=data[i+j];
+            obj[j.toString()]=data[i+j];
           }
         }
         this.groupedData.push(obj);
       }
-    });
+    })
   }
 
   ngOnInit(): void {
+    
   }
 
-  public handleClick(e: Event)
+  public handleClick(e: string)
   {
-    this.router.navigate(['countries/'+e.target.textContent]);
+    this.router.navigate(['countries/'+e.replace(/^\s+/g, '').replace(/^\s+|\s+$/g, '')]);
   }
 
 }

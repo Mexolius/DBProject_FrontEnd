@@ -2,8 +2,8 @@
 
 <table class="maintab">
     <tr *ngFor="let row of groupedData">
-        <td *ngFor="let col of headers" (click)="handleClick($event)">
-            {{row[col].countryName}}
+        <td *ngFor="let col of headers" (click)="handleClick($event.target.textContent)">
+            {{row[col]}}
         </td>
     </tr>
 </table>

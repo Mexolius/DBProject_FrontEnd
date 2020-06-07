@@ -13,6 +13,8 @@ export class DatabaseService {
   private daysURL: string;
   private summaryURL: string;
   private differenceURL: string;
+  private countryNamesURL;
+  private countryNames: Array<String>;
 
 
   constructor(private http: HttpClient) {
@@ -21,17 +23,28 @@ export class DatabaseService {
     this.summaryURL='/summary';
     this.daysURL='/days';
     this.differenceURL='/difference';
+    this.countryNamesURL='/countryNames'
+
   }
 
-  public getCountryNames(): Promise<CountryInfo[]>
+  public getCountryNames(): Promise<String[]>
   {
-    return this.http.get<CountryInfo[]>(this.baseURL.concat(this.countriesURL)).pipe(
-      map(data=>
-        data.map(info=>
-          new CountryInfo(info.countryId,info.countryName,info.epidemyDays.slice(0,1))
-          ).sort((a,b)=>{ return a.countryName<b.countryName?-1:1; })
-        )
-      ).toPromise();
+    if(this.countryNames===undefined)
+    {
+      return this.http.get<String[]>(this.baseURL.concat(this.countryNamesURL)).toPromise().then(data=>this.countryNames=data);
+    } 
+    else return new Promise((res,rej)=>
+    {
+      res(this.countryNames)
+    });
+    
+  }
+
+  public countryExists(name: string): Promise<Boolean>
+  {
+      return this.http.get<String[]>(this.baseURL.concat(this.countryNamesURL)).pipe(map(data=>{
+        return data.includes(name);
+      })).toPromise();
   }
 
   public getTotalSummary() : Observable<EpidemyDay[]>
@@ -44,12 +57,11 @@ export class DatabaseService {
     return this.http.get<EpidemyDay>(this.baseURL.concat(this.summaryURL).concat('/current'));
   }
 
-  public getCountryInfo(countryName: string) : Observable<EpidemyDay[]>
+  public getCountryInfo(countryName: string) : Promise<EpidemyDay[]>
   {
+    countryName.replace(/^\s+/g, '').replace(/^\s+|\s+$/g, '')
     countryName=countryName.charAt(0).toLocaleUpperCase()+countryName.substring(1);
-    if(countryName[0]==' ') countryName=countryName.substring(1);
     var url = this.baseURL.concat(this.countriesURL).concat('/'+countryName);
-    console.log(url)
     return this.http.get<countryDetail>(url).pipe(
       map(data=> 
         {
@@ -58,17 +70,15 @@ export class DatabaseService {
             return null;
           } 
           return data.epidemyDays.sort((a,b)=>a.date<b.date?1:-1)
-        }));
+        })).toPromise();
 
   }
 
-  public getCountryDifference(countryName: string) : Observable<EpidemyDay[]>
+  public getCountryDifference(countryName: string) : Promise<EpidemyDay[]>
   {
+    countryName.replace(/^\s+/g, '').replace(/^\s+|\s+$/g, '')
     countryName=countryName.charAt(0).toLocaleUpperCase()+countryName.substring(1);
-    if(countryName[0]==' ') countryName=countryName.substring(1);
-    if(countryName[countryName.length-1]==' ') countryName=countryName.substring(0,countryName.length-1);
     var url = this.baseURL.concat(this.countriesURL).concat('/'+countryName).concat(this.daysURL).concat(this.differenceURL);
-    console.log(url)
     return this.http.get<EpidemyDay[]>(url).pipe(
       map(data=> 
         {
@@ -77,7 +87,7 @@ export class DatabaseService {
             return null;
           }
           return data.sort((a,b)=>a.date<b.date?1:-1)
-        }));
+        })).toPromise();
 
   }
 }
