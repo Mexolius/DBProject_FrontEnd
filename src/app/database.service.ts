@@ -62,16 +62,9 @@ export class DatabaseService {
     countryName.replace(/^\s+/g, '').replace(/^\s+|\s+$/g, '')
     countryName=countryName.charAt(0).toLocaleUpperCase()+countryName.substring(1);
     var url = this.baseURL.concat(this.countriesURL).concat('/'+countryName);
-    return this.http.get<countryDetail>(url).pipe(
-      map(data=> 
-        {
-          if(data==null)
-          {
-            return null;
-          } 
-          return data.epidemyDays.sort((a,b)=>a.date<b.date?1:-1)
-        })).toPromise();
-
+    return this.http.get<countryDetail>(url)
+      .pipe( map(data=> data.epidemyDays.sort((a,b)=>a.date<b.date?1:-1)))
+      .toPromise();
   }
 
   public getCountryDifference(countryName: string) : Promise<EpidemyDay[]>
@@ -79,16 +72,9 @@ export class DatabaseService {
     countryName.replace(/^\s+/g, '').replace(/^\s+|\s+$/g, '')
     countryName=countryName.charAt(0).toLocaleUpperCase()+countryName.substring(1);
     var url = this.baseURL.concat(this.countriesURL).concat('/'+countryName).concat(this.daysURL).concat(this.differenceURL);
-    return this.http.get<EpidemyDay[]>(url).pipe(
-      map(data=> 
-        {
-          if(data==null)
-          {
-            return null;
-          }
-          return data.sort((a,b)=>a.date<b.date?1:-1)
-        })).toPromise();
-
+    return this.http.get<EpidemyDay[]>(url)
+      .pipe(map(data=> data.sort((a,b)=>a.date<b.date?1:-1)))
+      .toPromise();
   }
 }
 

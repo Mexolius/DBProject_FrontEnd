@@ -15,6 +15,7 @@ export class CountryListComponent implements OnInit {
   constructor(private db: DatabaseService, private router: Router) {
     this.headers=['0','1','2','3'];
     this.db.getCountryNames().then(data=>{
+      data.sort((a,b)=>a<b?-1:1)
       for(var i=0;i<data.length;i+=4)
       {
         var obj={};
