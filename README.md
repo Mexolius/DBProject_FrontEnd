@@ -1,27 +1,41 @@
-# Mdbs
+# DBProject Frontend
+A frontend part of the project based in the repository:
+https://github.com/Mexolius/DB_Project
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.4.
+This part focuses on the extraction of data from the API created in hibernate and presentation of data in the web browser.
+The web page is realised in Angular CLI version 9.1.4 and shows only a small part of possible data analysys
 
-## Development server
+# Graphs
+Grapths in the project are created via CanvasJS library which is compatible with Angular and easy to use.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+# Data
+Data is fetched from the API by sending a GET request through HTTP. Most of the time it's passed in the form of promise for simplicity, but for presentational purposes there is an instance of observable usage.
 
-## Code scaffolding
+# Components and Services
+Below you'll find a brief look at the working principles of components and services used in the project
+### Database service
+The service is responsible for fetching data from the API created with Hibernate and Spring. Most of the requests are passed directly from the database, although some of them aren't sorted by default. In that case the sorting happens in the service as well. Ther general structure of a request:
+```
+return this.http.get<EpidemyDay[]>(url)
+    .pipe(map(data=> data.sort((a,b)=>a.date<b.date?1:-1)))
+    .toPromise();
+```
+Since the data doesn't change untill the API is reset it's more convinient to return the data as a Promise rather than an Observable.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+### Home component
+Website homepage.
 
-## Build
+### Navbar component
+Navigation menu located at the top of the screen on most of the pages. Besides allowing the user to enter further navigation-related pages it also allows for a simple string-based search. If the searched phrase is no a valid country (from the API perspective) it redirects you to the 'country not found' page.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+### Country not found component
+Simplistic view to display in case of a failed string search or direct and incorect detail request. It is mostly a placeholder and only allows for a homepage redirect
 
-## Running unit tests
+### Country-list component
+A simple listing component that allows you to choose a country of interest.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+### Country detail component
+A detailed view of the Covid-related statistics of a chosen country. The user can choose from 6 graphs showing him the overall (sumaric) or daily (increase) of confirmed cases/recoveris/deaths.
 
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+### Countries component
+It works as a worldwide summary component, You can display a sumaric view of the above mentioned 3 statistics, or compare the overall sum of them via a pie chart.
